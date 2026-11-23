@@ -1,0 +1,52 @@
+import{SAMPLES}from"data";
+export const CFG={wa:"919999999999",phone:"+91 99999 99999",mail:"hello@hindnet.in",addr:"Your shop address, City, State",hours:"Mon-Sat, 10 AM - 8 PM",model:"",lat:26.310596,lng:86.8453388,open:"",close:"",off:"",ga:"G-30792DZR5B",fee:1500,bnote:"",brands:["Dell","HP","Lenovo","Asus","Apple","Acer","MSI","Logitech","Sony"]};
+
+const FBC={apiKey:"AIzaSyAcKFw1IKx9BAcQUfX4Vg75Pr8vzCfTH1s",authDomain:"hindnetweb.firebaseapp.com",projectId:"hindnetweb",storageBucket:"hindnetweb.firebasestorage.app",messagingSenderId:"1038020453028",appId:"1:1038020453028:web:5234108e453a1f015cfc31"},CDN="https://www.gstatic.com/firebasejs/10.12.2/";
+export const X={user:null};let fbp,ap;
+export const fb=()=>fbp||(fbp=Promise.all([import(CDN+"firebase-app.js"),import(CDN+"firebase-auth.js"),import(CDN+"firebase-firestore.js")]).then(([a,A,F])=>{const app=a.initializeApp(FBC);return{auth:A.getAuth(app),db:F.getFirestore(app),A,F}}));
+export const whenAuth=()=>ap||(ap=fb().then(({auth,A})=>new Promise(r=>{let f=1;A.onAuthStateChanged(auth,u=>{X.user=u;dispatchEvent(new CustomEvent("auth",{detail:u}));if(f){f=0;r(u)}})})));
+export const hasSession=()=>{try{return Object.keys(localStorage).some(k=>k.startsWith("firebase:authUser:"))}catch{return false}};
+export const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+export const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+export const S=(()=>{try{return JSON.parse(localStorage.hn||"{}")}catch{return{}}})();
+export const save=()=>{try{localStorage.hn=JSON.stringify(S)}catch{}};
+export const applyPrefs=()=>{const t=S.t||"light";document.documentElement.dataset.theme=t=="auto"?(matchMedia("(prefers-color-scheme:light)").matches?"light":"dark"):t;document.body.classList.toggle("noanim",S.a===0)};
+export const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),3200)};
+const mem={},fe={},rd={},raw={},dec=(c,r)=>(r.length?r:(SAMPLES[c]||[]).map((x,i)=>({...x,id:"s"+i,sample:1,mrp:x.price?Math.round(x.price*1.12/100)*100:0}))).map(x=>({...x,_c:c}));
+export function list(c){if(!mem[c]){let s="[]";try{s=localStorage["hn_"+c]||"[]"}catch{}raw[c]=s;try{mem[c]=dec(c,JSON.parse(s))}catch{mem[c]=dec(c,[])}}if(!fe[c])refresh(c);return mem[c]}
+const REST=`https://firestore.googleapis.com/v1/projects/${FBC.projectId}/databases/(default)/documents`,CARD="name,brand,price,mrp,stock,specs,img,at,highlights,desc,table,hue,hidden",FLD={laptops:CARD,accessories:CARD,desktops:CARD,parts:"cat,name,brand,price,stock,specs,size,ddr,speed,socket,ff,watts,igpu,img,hidden,at",gallery:"caption,img,at",offers:"title,desc,code,tag,at",reviews:"name,rating,title,text,at"};
+const dv=f=>{if(!f)return;if("stringValue"in f)return f.stringValue;if("integerValue"in f)return+f.integerValue;if("doubleValue"in f)return f.doubleValue;if("booleanValue"in f)return f.booleanValue;if("nullValue"in f)return null;if("arrayValue"in f)return(f.arrayValue.values||[]).map(dv);if("mapValue"in f)return Object.fromEntries(Object.entries(f.mapValue.fields||{}).map(([k,v])=>[k,dv(v)]))},dd=d=>({id:d.name.split("/").pop(),...Object.fromEntries(Object.entries(d.fields||{}).map(([k,v])=>[k,dv(v)]))});
+export function refresh(c){fe[c]=1;const u=`${REST}/${c}?orderBy=at%20desc&pageSize=${c=="parts"?300:100}&key=${FBC.apiKey}`+(FLD[c]||"").split(",").filter(Boolean).map(f=>"&mask.fieldPaths="+f).join("");
+return rd[c]=(async()=>{try{const ct=new AbortController(),t=setTimeout(()=>ct.abort(),10000),j=await(await fetch(u,{signal:ct.signal})).json();clearTimeout(t);if(j.error)return;const r=(j.documents||[]).map(dd).filter(x=>!x.hidden),s=JSON.stringify(r);if(s!==raw[c]){raw[c]=s;mem[c]=dec(c,r);try{localStorage["hn_"+c]=s}catch{}dispatchEvent(new Event("data"))}}catch{}})()}
+export const media=async id=>{try{const j=await(await fetch(`${REST}/media/${encodeURIComponent(id)}?key=${FBC.apiKey}`)).json();return j.fields?dv(j.fields.images):null}catch{return null}};
+export const add=async(c,d)=>{const{db,F}=await fb();return F.addDoc(F.collection(db,c),{...d,at:Date.now()})};
+export const price=p=>Number(p)?"₹"+Number(p).toLocaleString("en-IN"):esc(p);
+export const art=x=>{const i=x.images?.[0]||x.img;return i?`<img loading="lazy" src="${esc(i)}" alt="${esc(x.name||x.caption)}">`:`<div class="art" style="--h:${+x.hue||240}"><b>${esc(x.brand||x.caption)}</b><span>${esc(x.name||"")}</span></div>`};
+export const card=x=>{const o=x.mrp>x.price?Math.round((1-x.price/x.mrp)*100):0;return`<a class="card tilt" href="/product/${x._c}/${x.id}"><div class="media">${art(x)}<button class="wl${wl.has(x._c+":"+x.id)?" on":""}" data-wl="${x._c}:${x.id}" aria-label="Save to wishlist"><svg class="ic"><use href="#i-heart"/></svg></button>${x.sample?'<em class="bdg">Demo</em>':""}${x.stock!=null&&x.stock!==""&&+x.stock===0?'<em class="bdg r">Sold out</em>':o?`<em class="bdg r">${o}% off</em>`:""}</div><div class="b"><small>${esc(x.brand)}</small><h3>${esc(x.name)}</h3><div class="chips">${String(x.specs||"").split("|").filter(s=>s.trim()).slice(0,3).map(s=>`<i>${esc(s.trim())}</i>`).join("")}</div><div class="row"><b>${price(x.price)}</b><span class="btn p sm">View</span></div></div></a>`};
+export const get=async(c,i)=>{let x=list(c).find(y=>y.id==i);if(!x){await rd[c];x=list(c).find(y=>y.id==i)}return x};
+export const liveRev=()=>list("reviews").filter(x=>!x.sample).map(x=>({...x,date:new Date(x.at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}));
+export const rcard=r=>`<article class="rc"><div class="rh"><span class="av">${esc((r.name||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase())}</span><div><b>${esc(r.name)}</b><br><small class="m">${esc(r.city||"Hindnet customer")}${r.verified?" · Verified buyer":""}</small></div></div><span class="st">${stars(r.rating)}</span><h3>${esc(r.title)}</h3><p class="m">${esc(r.text)}</p><small class="m">${esc(r.date||"")}</small></article>`;
+export const stars=n=>"★".repeat(n)+"☆".repeat(5-n);
+
+export const go=p=>{if(p!=location.pathname)history.pushState({},"",p);dispatchEvent(new PopStateEvent("popstate"))};
+export function setSEO({title="Hindnet",desc="",img,ld=[],noindex}={}){const o=location.origin,u=o+location.pathname.replace(/\/(home|app\.html)$/,"/"),I=img||o+"/assets/og.png",set=(k,n,a,v)=>{let e=document.head.querySelector(`${k}[${a}="${n}"]`);if(!e){e=document.createElement(k);e.setAttribute(a,n);document.head.append(e)}e.setAttribute(k=="link"?"href":"content",v)};
+document.title=title;set("meta","description","name",desc);set("link","canonical","rel",u);set("meta","og:title","property",title);set("meta","og:description","property",desc);set("meta","og:url","property",u);set("meta","og:image","property",I);set("meta","og:type","property","website");set("meta","twitter:card","name","summary_large_image");set("meta","twitter:title","name",title);set("meta","twitter:description","name",desc);set("meta","twitter:image","name",I);set("meta","robots","name",noindex?"noindex, nofollow":"index, follow, max-image-preview:large");
+let s=document.getElementById("ld");if(!s){s=document.createElement("script");s.type="application/ld+json";s.id="ld";document.head.append(s)}s.textContent=JSON.stringify(ld).replace(/</g,"\\u003c")}
+
+try{const c=JSON.parse(localStorage.hn_cfg||"{}");if(c.wa||c.phone||c.mail||c.addr){Object.assign(CFG,c);CFG.set=1}}catch{}
+setTimeout(()=>fetch(`${REST}/settings?pageSize=10&key=${FBC.apiKey}`).then(r=>r.json()).then(j=>{const sd=(j.documents||[]).find(x=>x.name.endsWith("/settings/site")),bd=(j.documents||[]).find(x=>x.name.endsWith("/settings/builder")),d=sd&&sd.fields?dv({mapValue:{fields:sd.fields}}):{},n={};if(bd&&bd.fields){const b=dv({mapValue:{fields:bd.fields}});if(b.fee!=null&&b.fee!=="")n.fee=+b.fee;if(b.note)n.bnote=String(b.note)}if(!sd&&!bd)return;["wa","phone","mail","addr","hours","open","close","off"].forEach(k=>{if(d[k])n[k]=String(d[k])});["lat","lng"].forEach(k=>{if(d[k]!=null&&d[k]!==""&&!isNaN(d[k]))n[k]=+d[k]});const s=JSON.stringify(n);let o="";try{o=localStorage.hn_cfg}catch{}if(s!==o){Object.assign(CFG,n);if(sd&&sd.fields)CFG.set=1;try{localStorage.hn_cfg=s}catch{}dispatchEvent(new Event("data"))}}).catch(()=>{}),300);
+
+export const mapUrl=()=>`https://www.google.com/maps/search/?api=1&query=${CFG.lat},${CFG.lng}`;
+export const dirUrl=()=>`https://www.google.com/maps/dir/?api=1&destination=${CFG.lat},${CFG.lng}`;
+export const embedUrl=sat=>`https://maps.google.com/maps?q=${CFG.lat},${CFG.lng}&z=17&output=embed${sat?"&t=k":""}`;
+const f12=s=>{const[h,m]=s.split(":").map(Number);return(h%12||12)+":"+String(m).padStart(2,"0")+" "+(h<12?"AM":"PM")};
+export const hoursText=()=>CFG.set&&CFG.open&&CFG.close?`${CFG.off&&CFG.off!="None"?"Closed on "+CFG.off+" · ":""}${f12(CFG.open)} to ${f12(CFG.close)}`:CFG.hours;
+export function openNow(){if(!CFG.set||!CFG.open||!CFG.close)return null;const p=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",weekday:"long",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date()),g=t=>p.find(x=>x.type==t).value,m=(+g("hour")%24)*60+ +g("minute"),t=s=>{const[h,i]=s.split(":");return h*60+ +i},o=t(CFG.open),c=t(CFG.close),off=CFG.off&&CFG.off!="None"&&CFG.off==g("weekday"),open=!off&&m>=o&&m<c;return{open,text:off?"Closed today":open?"Open now · closes "+f12(CFG.close):m<o?"Closed · opens "+f12(CFG.open):"Closed · opens tomorrow "+f12(CFG.open)}}
+export const km=(a,b,c,d)=>{const r=x=>x*Math.PI/180,h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 12742*Math.asin(Math.sqrt(h))};
+const rj=(k,d)=>{try{return JSON.parse(localStorage[k])||d}catch{return d}},sj=(k,v)=>{try{localStorage[k]=JSON.stringify(v)}catch{}};
+export const wl={all:()=>rj("hn_wl",[]),has:k=>wl.all().includes(k),toggle:k=>{let a=wl.all();a=a.includes(k)?a.filter(x=>x!=k):[k,...a];sj("hn_wl",a);return a.includes(k)}};
+export const recent={all:()=>rj("hn_rv",[]),add:k=>sj("hn_rv",[k,...recent.all().filter(x=>x!=k)].slice(0,9))};
+export const all=()=>[...list("laptops"),...list("desktops"),...list("accessories")];
+export const ready=c=>{list(c);return rd[c]};
+export const recentItems=()=>recent.all().map(k=>all().find(x=>x._c+":"+x.id==k)).filter(Boolean);
+export const track=(n,p)=>{try{window.gtag&&window.gtag("event",n,p)}catch{}};

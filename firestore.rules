@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function admin() { return request.auth != null && request.auth.token.email == 'hindnet@web.com'; }
+    match /laptops/{id} { allow read: if true; allow write: if admin(); }
+    match /desktops/{id} { allow read: if true; allow write: if admin(); }
+    match /accessories/{id} { allow read: if true; allow write: if admin(); }
+    match /parts/{id} { allow read: if true; allow write: if admin(); }
+    match /gallery/{id} { allow read: if true; allow write: if admin(); }
+    match /settings/{id} { allow read: if true; allow write: if admin(); }
+    match /media/{id} { allow read: if true; allow write: if admin(); }
+    match /offers/{id} { allow read: if true; allow write: if admin(); }
+    match /reviews/{id} { allow read: if true; allow create: if request.auth != null && request.resource.data.rating >= 1 && request.resource.data.rating <= 5 && request.resource.data.text.size() < 1000; allow delete: if admin(); }
+    match /bookings/{id} { allow create: if request.auth != null; allow read, update, delete: if admin(); }
+    match /messages/{id} { allow create: if request.auth != null && request.resource.data.message.size() < 1000; allow read, update, delete: if admin(); }
+    match /builds/{id} { allow create: if request.auth != null && request.resource.data.items.size() <= 30; allow read, update, delete: if admin(); }
+  }
+}

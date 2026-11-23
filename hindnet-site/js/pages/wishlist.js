@@ -1,0 +1,4 @@
+import{card,wl,CFG,price,all,$,toast}from"core";
+export default async()=>{const it=wl.all().map(k=>all().find(x=>x._c+":"+x.id==k)).filter(Boolean),msg=encodeURIComponent("Hi Hindnet, I am interested in:\n"+it.map(x=>"• "+x.name+" ("+price(x.price).replace("₹","Rs ")+")").join("\n"));
+return`<h1 class="ph">Wishlist</h1><p class="lead">Products you saved on this device.</p>`+(it.length?`<p><a class="btn p" target="_blank" rel="noopener" href="https://wa.me/${CFG.wa}?text=${msg}">Enquire about all on WhatsApp</a> <button class="btn" id="wcl">Clear all</button></p><div class="g" style="margin-top:20px">${it.map(card).join("")}</div>`:`<div class="pn"><p>Nothing saved yet. Tap the heart on any product to save it here.</p><a class="btn p" href="/laptops">Browse laptops</a></div>`)};
+export const mount=()=>{const b=$("#wcl");if(b)b.onclick=()=>{wl.all().forEach(k=>wl.toggle(k));dispatchEvent(new Event("rerender"));toast("Wishlist cleared")}};
