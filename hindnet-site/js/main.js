@@ -13,7 +13,7 @@ if(!ks)clean=m.mount?.(A)||null;$$(".rv",A).forEach(x=>soft?x.classList.add("in"
 catch(e){console.error(e);if(t==tok)$("#app").innerHTML='<h1 class="ph">Something went wrong</h1><p class="lead">Please refresh the page.</p>'}
 finally{if(t==tok){document.body.classList.remove("busy");if(!soft)pv()}}
 setTimeout(()=>$$(".rv:not(.in)").forEach(x=>x.classList.add("in")),2500)}
-addEventListener("popstate",render);addEventListener("hashchange",()=>{if(location.hash.startsWith("#/")){history.replaceState({},"",location.hash.slice(1));render()}});addEventListener("rerender",render);addEventListener("data",()=>{if(!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||"")&&cur!="account"&&cur!="settings")render(true)});applyPrefs();
+addEventListener("popstate",render);addEventListener("hashchange",()=>{if(location.hash.startsWith("#/")){history.replaceState({},"",location.hash.slice(1));render()}});addEventListener("rerender",render);addEventListener("data",()=>{if(!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||"")&&cur!="account"&&cur!="settings"&&cur!="build")render(true)});applyPrefs();
 const th=()=>{S.t=document.documentElement.dataset.theme=="dark"?"light":"dark";save();applyPrefs()};$("#tg").onclick=$("#tg2").onclick=th;
 const nv=o=>{document.body.classList.toggle("nav-open",o);$("#mn").setAttribute("aria-expanded",o)};
 $("#mn").onclick=()=>nv(!document.body.classList.contains("nav-open"));$("#scrim").onclick=()=>nv(false);
